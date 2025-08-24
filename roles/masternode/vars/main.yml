@@ -1,0 +1,2 @@
+# vars file for cluster
+kubernetes_install_script : https://raw.githubusercontent.com/lerndevops/labs/master/scripts/installK8S.sh

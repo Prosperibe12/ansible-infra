@@ -1,0 +1,25 @@
+# update apt cache
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: yes
+
+# install required packages
+- name: Install required packages
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: latest
+    update_cache: yes 
+  loop:
+    - git
+    - curl
+    - docker.io
+    - python3-pip
+
+# update docker service to start on boot
+- name: Ensure docker service is enabled and started
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: yes
+  
+

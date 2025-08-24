@@ -1,0 +1,67 @@
+- name: Download Installation Scripts
+  ansible.builtin.get_url:
+   url: "{{ kubernetes_install_script }}"
+   dest: /tmp
+   mode: '0755'
+  become: true
+  become_user: root
+
+- name: Run Installation Script
+  ansible.builtin.command: |
+   echo "Yes" | bash /tmp/installK8S.sh
+  become: true
+  become_user: root
+
+- name: Reset any previous kubeadm setup
+  ansible.builtin.command:
+   cmd: kubeadm reset -f
+  become: true
+  ignore_errors: true
+
+- name: Initialize Kubernetes Master Node with public IP
+  ansible.builtin.command:
+   cmd: kubeadm init --apiserver-advertise-address=13.134.48.184 --apiserver-cert-extra-sans=13.134.48.184 --pod-network-cidr=192.168.0.0/16 --ignore-preflight-errors=all
+  become: true
+
+- name: Create .kube directory for root
+  ansible.builtin.file:
+   path: /root/.kube
+   state: directory
+   mode: '0755'
+  become: true
+
+- name: Copy admin.conf to root's kube config
+  ansible.builtin.copy:
+   src: /etc/kubernetes/admin.conf
+   dest: /root/.kube/config
+   remote_src: true
+   owner: root
+   group: root
+   mode: '0644'
+  become: true
+
+- name: Wait for Kubernetes API server to be ready
+  ansible.builtin.command:
+   cmd: kubectl get nodes
+  become: true
+  register: kubectl_result
+  until: kubectl_result.rc == 0
+  retries: 10
+  delay: 30
+
+- name: Install Calico Pod Network Add-on
+  ansible.builtin.command:
+   cmd: kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.24.1/manifests/calico.yaml
+  become: true
+  retries: 3
+  delay: 10
+
+- name: Generate kubeadm join command
+  ansible.builtin.command: kubeadm token create --ttl 0 --print-join-command
+  become: true
+  register: join_cmd
+  changed_when: false
+
+- name: Save join command fact
+  ansible.builtin.set_fact:
+   join_command: "{{ join_cmd.stdout }}"

@@ -1,0 +1,35 @@
+# Kubernetes Worker Nodes Setup
+- name: Install Containerd Runtime
+  ansible.builtin.get_url:
+   url: "{{ containerd_url }}"
+   dest: /tmp
+
+- name: Run containerd script
+  ansible.builtin.command: |
+   echo "Yes" | bash /tmp/installContainerd.sh
+  become: true
+  become_user: root
+
+- name: Start Containerd Service
+  ansible.builtin.systemd_service:
+    name: containerd.service
+    state: restarted
+    enabled: true
+    become: true
+    become_user: root
+
+- name: Install Kubernetes Components
+  ansible.builtin.get_url:
+    url: "{{ component_url }}"
+    dest: /tmp
+
+- name: Run Kubernetes script
+  ansible.builtin.command: |
+   echo "Yes" | bash /tmp/installK8S.sh
+  become: true
+  become_user: root
+
+- name: Join Worker Node to the Cluster
+  ansible.builtin.command: "{{ hostvars[groups['masternode'][0]].join_command }}"
+  become: true
+  become_user: root

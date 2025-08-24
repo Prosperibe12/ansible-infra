@@ -1,0 +1,20 @@
+- name: Cluster Setup Playbook
+  hosts: aws_ec2
+  become: true
+  become_user: root
+  roles:
+   - setup
+
+- name: Master Node Setup
+  hosts: masternode
+  become: true
+  become_user: root
+  roles:
+   - masternode
+
+- name: Worker Nodes Setup
+  hosts: workernodes
+  become: true
+  become_user: root
+  roles:
+   - workernodes
