@@ -1,9 +1,5 @@
 masternode:
-   hosts:
-      13.134.48.184
+   hosts: []
 
 workernodes:
-   hosts:
-      13.134.207.134
-      35.178.106.34
-      18.171.90.114
+   hosts: []
